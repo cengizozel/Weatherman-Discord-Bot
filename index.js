@@ -41,9 +41,10 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.id === client.user.id) return;
 
-  if (message.content === 'reset') {
+  if (message.content === '!reset') {
     conversationHistory = "";
-    message.channel.send("Conversation history reset.");    return;
+    message.channel.send("Conversation history reset.");
+    return;
   }
 
   now = new Date().getTime();
@@ -56,7 +57,8 @@ client.on('messageCreate', async (message) => {
   }
 
   let getWeather = async (city) => {
-    // OpenWeatherMap API key    const key = process.env['openweathermap_key'];
+    // OpenWeatherMap API key
+    const key = process.env['openweathermap_key'];
 
     let response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${key}&units=metric`
@@ -96,7 +98,22 @@ client.on('messageCreate', async (message) => {
     return data;
   }
 
+  // Message action starts here
+
+  // Check if message was sent in "weather" channel
+  let channel_sent = message.channel.id
+  let og_channel = '1018387866679771186'
+  let test_channel = '1018550641393680384'
+  if ((channel_sent !== og_channel) && (channel_sent !== test_channel)) {
+    console.log("Message not sent to bot");
+    return;
+  }
+
   let message_content = message.content;
+
+  if (message_content.startsWith('!')) {
+    return;
+  }
 
   if (message_content == "!reset") {
     conversationHistory = "";
@@ -211,6 +228,12 @@ client.on('messageCreate', async (message) => {
     console.log("General GPT3 Prompt: ", message_content);
     let gpt3 = await getGPT3(prompt);
 
+    // If gpt3 response is empty, then make it "I love you."
+    if (gpt3 === "") {
+      console.log("GPT3 response is empty. Setting it to \"I love you.\"");
+      gpt3 = "I love you.";
+    }
+
     console.log("General GPT3 response: ", gpt3);
 
     let gpt3_send = "";
@@ -234,4 +257,3 @@ client.on('messageCreate', async (message) => {
 
 // Login to Discord with your client's token
 client.login(TOKEN);
-
