@@ -4,7 +4,7 @@ A Discord bot that uses OpenWeatherMap API to get weather data and GPT-3 to comm
 
 Current features:
 - Get weather for one location with the use of OpenWeatherMap
-- Give clothin suggestions based on weather and wind conditions
+- Give clothing suggestions based on weather and wind conditions
 - Can have a chat about anything with the use of GPT-3
 
 Planned features:
