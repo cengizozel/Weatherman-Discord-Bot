@@ -19,7 +19,7 @@ let conversationHistory = "\nX: Hey\nY: Hi";
 const second = 1000;
 const minute = second * 60;
 const hour = minute * 60;
-const start = new Date().getTime();
+let start = new Date().getTime();
 let now = new Date().getTime();
 
 // Create a new client instance
