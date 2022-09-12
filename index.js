@@ -49,6 +49,7 @@ client.on('messageCreate', async (message) => {
 
   now = new Date().getTime();
   if (now - start > hour) {
+    start = new Date().getTime();
     conversationHistory = "";
     console.log("\nResetting conversation history");
   } else {
