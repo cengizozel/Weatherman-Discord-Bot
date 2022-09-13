@@ -71,7 +71,7 @@ client.on('messageCreate', async (message) => {
   }
 
   let getGPT3 = async (prompt) => {
-    const url = 'https://api.openai.com/v1/engines/text-davinci-002/completions';
+    const url = 'https://api.openai.com/v1/engines/text-curie-001/completions';
     const params = {
       prompt: prompt + '\n',
       max_tokens: 1000,
