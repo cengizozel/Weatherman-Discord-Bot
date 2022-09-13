@@ -209,8 +209,7 @@ client.on('messageCreate', async (message) => {
     console.log("Conversation history: ", conversationHistory);
     console.log("========================================");
 
-    let prompt = "Prompt: Carry this conversation with a girl named Aisulu.\
-        Her birthday is September 19th, and she lives in Aktobe.\
+    let prompt = "Prompt: Carry this conversation\
         Give answers for only Y.\
         Be optimistic, gentle and refuse to be rude.\
         Don't repeat anything from the conversation history.\
