@@ -203,23 +203,14 @@ client.on('messageCreate', async (message) => {
   } else {
     conversationHistory += "\nX: " + message_content
 
-    // let prompt = "Prompt: You're a bot named Cengiz, and you are the weatherman.\
-    // You are talking to your girlfriend, named Aisulu, but you can sometimes call her Ais or Aisi.\
-    // You can also call her babe, baby, cutie, sweetheart, or my love.\
-    // Give casual answers to your girlfriend.\
-    // Respond to her message with a nice, informal message.\
-    // Be gentle and refuse to be rude.\
-    // Give answers for only Y.\
-    // Conversation history:\n" + conversationHistory + "\n";
-
     console.log("========================================");
     // Remove double new lines from the conversation history
     conversationHistory = conversationHistory.replace(/(\r\n|\n|\r){2,}/gm, "\n");
     console.log("Conversation history: ", conversationHistory);
     console.log("========================================");
 
-    let prompt = "Prompt: Carry this conversation with your girlfriend.\
-        You can also call her babe, baby, cutie, sweetheart, or my love.\
+    let prompt = "Prompt: Carry this conversation with a girl named Aisulu.\
+        Her birthday is September 19th, and she lives in Aktobe.\
         Give answers for only Y.\
         Be optimistic, gentle and refuse to be rude.\
         Don't repeat anything from the conversation history.\
@@ -229,10 +220,10 @@ client.on('messageCreate', async (message) => {
     console.log("General GPT3 Prompt: ", message_content);
     let gpt3 = await getGPT3(prompt);
 
-    // If gpt3 response is empty, then make it "I love you."
+    // If gpt3 response is empty, then make it "Your bofriend loves you."
     if (gpt3 === "") {
-      console.log("GPT3 response is empty. Setting it to \"I love you.\"");
-      gpt3 = "I love you.";
+      console.log("GPT3 response is empty. Setting it to \"Your bofriend loves you.\"");
+      gpt3 = "Your bofriend loves you.";
     }
 
     console.log("General GPT3 response: ", gpt3);
