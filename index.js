@@ -22,6 +22,8 @@ const hour = minute * 60;
 let start = new Date().getTime();
 let now = new Date().getTime();
 
+let isPaused = false;
+
 // Create a new client instance
 const client = new Client({
   intents: [
@@ -41,6 +43,20 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.id === client.user.id) return;
 
+  if (message.content === '!p') {
+    if (isPaused) {
+      message.channel.send("Conversation resuming.");
+    } else {
+      message.channel.send("Conversation paused.");
+    }
+    isPaused = !isPaused
+    return;
+  }
+
+  if (isPaused) {
+    return;
+  }
+
   if (message.content === '!reset') {
     conversationHistory = "";
     message.channel.send("Conversation history reset.");
@@ -48,7 +64,7 @@ client.on('messageCreate', async (message) => {
   }
 
   now = new Date().getTime();
-  if (now - start > hour) {
+  if (now - start > 5 * minute) {
     start = new Date().getTime();
     conversationHistory = "";
     console.log("\nResetting conversation history");
@@ -71,7 +87,7 @@ client.on('messageCreate', async (message) => {
   }
 
   let getGPT3 = async (prompt) => {
-    const url = 'https://api.openai.com/v1/engines/text-curie-001/completions';
+    const url = 'https://api.openai.com/v1/engines/text-davinci-002/completions';
     const params = {
       prompt: prompt + '\n',
       max_tokens: 1000,
