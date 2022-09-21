@@ -13,9 +13,7 @@ import got from 'got';
 // 1. Discord Bot Token
 // 2. OpenWeatherMap API Key
 // 3. OpenAI API Key
-// 4. Unsplash API Key
-
-const UnsplashKey = "vbnDi61--0YFAcTM654sbBhi64Zge9A8C_LLfTwmLCk";
+// 4. Serp Key
 
 // Discord bot token
 const TOKEN = process.env['discord_token'];
