@@ -280,8 +280,7 @@ client.on('messageCreate', async (message) => {
     let prompt = "Prompt: Carry this conversation\
         Give answers for only Weatherman.\
         You are talking to " + message.author.username + ".\
-        Be optimistic, gentle and refuse to be rude.\
-        Don't repeat anything from the conversation history.\
+        Do not say similar things from the Conversation history.\
         Open different topics.\
         Conversation history:\n\n" + conversationHistory + "\n";
 
@@ -326,8 +325,7 @@ client.on('messageCreate', async (message) => {
       prompt = "Prompt: Carry this conversation\
       Give answers for only Weatherman.\
       You are talking to " + message.author.username + ".\
-      Be optimistic, gentle and refuse to be rude.\
-      Don't repeat anything from the conversation history.\
+      Do not say similar things from the Conversation history.\
       Open different topics.\
       Conversation history:\n\n" + message_content + "\n";
 
