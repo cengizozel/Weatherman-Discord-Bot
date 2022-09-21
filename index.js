@@ -2,6 +2,9 @@
 // const { Client, GatewayIntentBits } = require('discord.js');
 // const fetch = require('node-fetch');
 
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { Client, GatewayIntentBits } from 'discord.js';
 import fetch from 'node-fetch';
 import got from 'got';
@@ -10,11 +13,14 @@ import got from 'got';
 // 1. Discord Bot Token
 // 2. OpenWeatherMap API Key
 // 3. OpenAI API Key
+// 4. Unsplash API Key
+
+const UnsplashKey = "vbnDi61--0YFAcTM654sbBhi64Zge9A8C_LLfTwmLCk";
 
 // Discord bot token
 const TOKEN = process.env['discord_token'];
 
-let conversationHistory = "\nX: Hey\nY: Hi";
+let conversationHistory = [];
 
 const second = 1000;
 const minute = second * 60;
@@ -58,19 +64,27 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message.content === '!reset') {
-    conversationHistory = "";
+    conversationHistory = [];
     message.channel.send("Conversation history reset.");
     return;
   }
 
   now = new Date().getTime();
-  if (now - start > 5 * minute) {
+  if (now - start > 1 * hour) {
     start = new Date().getTime();
-    conversationHistory = "";
+    conversationHistory = [];
     console.log("\nResetting conversation history");
+    message.react("🔄");
+  } 
+  // reset conversation if total number of characters in conversation history is greater than 1500
+  else if (conversationHistory.join('').length > 1500) {
+    conversationHistory = [];
+    console.log("\nResetting conversation history");
+    message.react("🔄");
   } else {
     console.log("Now: " + now + " Start: " + start);
-    console.log("\nTime passed in minutes: " + (now - start) / minute);
+    // Round to closest 2 decimal places
+    console.log("\nTime passed in minutes: " + ((now - start) / minute).toFixed(2));
   }
 
   let getWeather = async (city) => {
@@ -115,6 +129,22 @@ client.on('messageCreate', async (message) => {
     return data;
   }
 
+  let getSerp = async (query) => {
+    let response = await fetch(
+      `https://serpapi.com/search.json?q=${query}&tbm=isch&ijn=0&api_key=${process.env['serp_key']}`
+    );
+
+    let data = await response.json();
+
+    let max_random = 10;
+    let random = Math.floor(Math.random() * max_random)
+    console.log("Length is " + data.images_results.length);
+    console.log("Selected random photo is " + random);
+    let image = data.images_results[random].original;
+
+    return image;
+  }
+
   // Message action starts here
 
   // Check if message was sent in "weather" channel
@@ -128,22 +158,45 @@ client.on('messageCreate', async (message) => {
 
   let message_content = message.content;
 
+  // Ignore messages that start with "!"
   if (message_content.startsWith('!')) {
     return;
   }
 
+  // Reset conversation history if message is "!reset"
   if (message_content == "!reset") {
-    conversationHistory = "";
+    conversationHistory = [];
     message.channel.send("Conversation history reset.");
     return;
   }
 
   console.log("Message content: ", message_content);
 
+  // Check for need for serpapi usage
+  // check if message_content lowercased contains starts with "show me"
+  if ((message_content.toLowerCase().startsWith("show me"))) {
+
+    conversationHistory.push(message.author.username + ": " + message_content);
+
+    let query = message_content.toLowerCase().split("show me ")[1];
+    conversationHistory.push("Weatherman: " + "[Image of " + query + "]");
+
+    console.log("Picture requested: " + query);
+
+    let picture = await getSerp(query);
+
+    console.log("Picture URL: ", picture);
+
+    message.channel.send(
+      picture
+    );
+    return
+  }
+
   // Go through all the words in the message
-  // If a word is "awww", "aww", or "aw" then change it to a smiley face
+  // If a word is "awwww", "awww", or "aww" then change it to a smiley face
   let awFound = false;
-  const heart_emojis = ['❤️', '💛', '💚', '💙', '💜', '🖤', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'];
+  const heart_emojis = ['❤️', '💛', '💚', '💙', '💜', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'];
   let words = message_content.split(" ");
   for (let i = 0; i < words.length; i++) {
     let word = words[i];
@@ -159,6 +212,7 @@ client.on('messageCreate', async (message) => {
     message_content = words.join(" ");
   }
 
+  // Check for need for weather api usage
   let prompt = "Return true if message_content is asking the weather or for clothing suggestions. Return false if not.\n\n\
     message_content = \""+ message_content + "\"\n Answer with one word: true or false\n\n";
 
@@ -216,17 +270,16 @@ client.on('messageCreate', async (message) => {
     message.channel.send(
       gpt3
     );
-  } else {
-    conversationHistory += "\nX: " + message_content
-
-    console.log("========================================");
-    // Remove double new lines from the conversation history
-    conversationHistory = conversationHistory.replace(/(\r\n|\n|\r){2,}/gm, "\n");
-    console.log("Conversation history: ", conversationHistory);
-    console.log("========================================");
+    return
+  }
+  
+  else {
+    // Add message by the user to the conversation history
+    conversationHistory.push(message.author.username + ": " + message_content);
 
     let prompt = "Prompt: Carry this conversation\
-        Give answers for only Y.\
+        Give answers for only Weatherman.\
+        You are talking to " + message.author.username + ".\
         Be optimistic, gentle and refuse to be rude.\
         Don't repeat anything from the conversation history.\
         Open different topics.\
@@ -245,20 +298,73 @@ client.on('messageCreate', async (message) => {
 
     let gpt3_send = "";
 
-    if (gpt3.includes("Y:")) {
-      gpt3_send = gpt3.split("Y:")[1];
-      if (gpt3_send.includes("X:")) {
-        gpt3_send = gpt3_send.split("X:")[0];
-      }
-    } else {
-      gpt3_send = gpt3;
+    // if (gpt3.includes("Y:")) {
+    //   gpt3_send = gpt3.split("Y:")[1];
+    //   if (gpt3_send.includes("X:")) {
+    //     gpt3_send = gpt3_send.split("X:")[0];
+    //   }
+    // } else {
+    //   gpt3_send = gpt3;
+    // }
+
+    // Remove new lines from the conversation history
+    gpt3 = gpt3.replace(/(\r\n|\n|\r)/gm, "");
+    // Remove any text in the beginning until the first : is found
+    if (gpt3.includes(":")) {
+      gpt3 = gpt3.split(":")[1];
     }
 
-    conversationHistory += "\nY: " + gpt3_send;
+
+    let new_message = gpt3.toLowerCase().replace(/\s+/g, '')
+    let old_message = conversationHistory[conversationHistory.length - 1].split(":")[1].toLowerCase().replace(/\s+/g, '')
+    if (conversationHistory.length > 1)
+    old_message = conversationHistory[conversationHistory.length - 2].split(":")[1].toLowerCase().replace(/\s+/g, '')
+    console.log("new_message: ", new_message);
+    console.log("old_message: ", old_message);
+    if (new_message === old_message) {
+      console.log("GPT3 response is the same as the previous message. Ignoring conversation history.");
+      prompt = "Prompt: Carry this conversation\
+      Give answers for only Weatherman.\
+      You are talking to " + message.author.username + ".\
+      Be optimistic, gentle and refuse to be rude.\
+      Don't repeat anything from the conversation history.\
+      Open different topics.\
+      Conversation history:\n\n" + message_content + "\n";
+
+      console.log("General GPT3 Prompt (no history): ", message_content);
+      gpt3 = await getGPT3(prompt);
+
+      if (gpt3 === "") {
+        console.log("GPT3 response is empty. Setting it to \"Your bofriend loves you.\"");
+        gpt3 = "Your bofriend loves you.";
+      }
+  
+      console.log("General GPT3 response (no history): ", gpt3);
+
+      // Remove new lines from the conversation history
+      gpt3 = gpt3.replace(/(\r\n|\n|\r)/gm, "");
+      // Remove any text in the beginning until the first : is found
+      if (gpt3.includes(":")) {
+        gpt3 = gpt3.split(":")[1];
+      }
+    } else {
+      console.log("GPT3 response is not the same as the last message. Sending it.");
+    }
+
+    conversationHistory.push("Weatherman: " + gpt3);
 
     message.channel.send(
-      gpt3_send
+      gpt3
     );
+
+    console.log("========================================");
+    for (let i = 0; i < conversationHistory.length; i++) {
+      // Remove new lines from the conversation history
+      conversationHistory[i] = conversationHistory[i].replace(/(\r\n|\n|\r)/gm, " ");
+    }
+    console.log("Conversation history: ", conversationHistory);
+    console.log("========================================");
+
   }
 });
 
